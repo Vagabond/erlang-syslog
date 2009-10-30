@@ -105,7 +105,7 @@ static void syslogdrv_output(ErlDrvData handle, char *buff, int bufflen)
 			/* re-call openlog in-case another instance of the port driver
 			 * was called in the mean time */
 			openlog(d->ident, d->logopt, d->facility);
-			syslog(priority, message);
+			syslog(priority, "%s", message);
 			free(message);
 			ei_x_encode_atom(&result, "ok");
 		} else {
