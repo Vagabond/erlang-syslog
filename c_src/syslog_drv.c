@@ -62,6 +62,7 @@ static void syslogdrv_output(ErlDrvData handle, char *buff, int bufflen)
 
 	if (ei_decode_tuple_header(buff, &index, &arity) || ei_decode_atom(buff, &index, operation)) {
 		encode_error(&result, "badarg");
+		goto done;
 	}
 
 	if (!strcmp("open", operation)) {
