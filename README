@@ -12,6 +12,8 @@ sudo ./rebar install
 Trying it
 ---------
 
+You should have a look at syslog.h
+
 In an other shell :
 $ tail -f /var/log/sylsog
 Or for mac user :
@@ -19,11 +21,42 @@ $ tail -f /var/log/system.log
 
 $ erl
 > syslog:start().
-> syslog:open("Beuha", 1, 128).
+> syslog:open("Beuha", 1, local0).
 > syslog:log(err, "Damned").
 
 API
 ---
+
+syslog:open(Ident, Logopt, Facility) :
+
+Ident is an arbitrary string
+Logopt
+Facility is an atom :
+ * kern
+ * user
+ * mail
+ * daemon
+ * auth
+ * syslog
+ * lpr
+ * news
+ * uucp
+ * cron
+ * authpriv
+ * ftp
+ * netinfo
+ * remoteauth
+ * install
+ * ras
+ * local0
+ * local1
+ * local2
+ * local3
+ * local4
+ * local5
+ * local6
+ * local7
+
 
 syslog:log(Priority, Message) :
 

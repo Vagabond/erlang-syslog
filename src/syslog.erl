@@ -31,7 +31,7 @@ start_linked() ->
 	gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 open(Ident, Logopt, Facility) ->
-	gen_server:call(?MODULE, {open, Ident, Logopt, Facility}).
+	gen_server:call(?MODULE, {open, Ident, Logopt, facility(Facility)}).
 
 log(Priority, Message) ->
 	gen_server:call(?MODULE, {log, priorities(Priority), Message}).
@@ -108,6 +108,32 @@ priorities(notice)  -> 5;
 priorities(info)    -> 6;
 priorities(debug)   -> 7;
 priorities(N)       -> N.
+
+facility(kern)      -> 0;
+facility(user)      -> 8;
+facility(mail)      -> 16;
+facility(daemon)    -> 24;
+facility(auth)      -> 32;
+facility(syslog)    -> 40;
+facility(lpr)       -> 48;
+facility(news)      -> 56;
+facility(uucp)      -> 64;
+facility(cron)      -> 72;
+facility(authpriv)  -> 80;
+facility(ftp)       -> 88;
+facility(netinfo)   -> 96;
+facility(remoteauth)-> 104;
+facility(install)   -> 112;
+facility(ras)       -> 120;
+facility(local0)    -> 16 * 8;
+facility(local1)    -> 17 * 8;
+facility(local2)    -> 18 * 8;
+facility(local3)    -> 19 * 8;
+facility(local4)    -> 20 * 8;
+facility(local5)    -> 21 * 8;
+facility(local6)    -> 22 * 8;
+facility(local7)    -> 23 * 8;
+facility(N)         -> N.
 
 load_path(File) ->
 	case lists:zf(fun(Ebin) ->
