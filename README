@@ -8,3 +8,16 @@ Installing it
 
 ./rebar compile
 sudo ./rebar install
+
+Trying it
+---------
+
+In an other shell :
+$ tail -f /var/log/sylsog
+Or for mac user :
+$ tail -f /var/log/system.log
+
+$ erl
+> syslog:start().
+> syslog:open("Beuha", 1, 128).
+> syslog:log(4, "Damned").
