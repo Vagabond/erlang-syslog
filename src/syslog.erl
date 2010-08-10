@@ -31,7 +31,7 @@ start_linked() ->
 	gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 open(Ident, Logopt, Facility) ->
-	gen_server:call(?MODULE, {open, Ident, Logopt, facility(Facility)}).
+	gen_server:call(?MODULE, {open, Ident, logopt(Logopt), facility(Facility)}).
 
 log(Priority, Message) ->
 	gen_server:call(?MODULE, {log, priorities(Priority), Message}).
@@ -134,6 +134,18 @@ facility(local5)    -> 21 * 8;
 facility(local6)    -> 22 * 8;
 facility(local7)    -> 23 * 8;
 facility(N)         -> N.
+
+openlog_opt(pid)    -> 1;
+openlog_opt(cons)   -> 2;
+openlog_opt(odelay) -> 4;
+openlog_opt(ndelay) -> 8;
+openlog_opt(perror) -> 20;
+openlog_opt(N)      -> N.
+
+logopt([Queue]) -> openlog_opt(Queue);
+logopt([Tail|Queue]) -> 
+	openlog_opt(Tail) bor logopt(Queue);
+logopt([]) -> 0.
 
 load_path(File) ->
 	case lists:zf(fun(Ebin) ->

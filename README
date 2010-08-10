@@ -21,7 +21,7 @@ $ tail -f /var/log/system.log
 
 $ erl
 > syslog:start().
-> syslog:open("Beuha", 1, local0).
+> syslog:open("Beuha", [cons, perror, pid], local0).
 > syslog:log(err, "Damned").
 
 API
@@ -30,7 +30,13 @@ API
 syslog:open(Ident, Logopt, Facility) :
 
 Ident is an arbitrary string
-Logopt
+Logopt is an array of options :
+ * pid
+ * cons
+ * odelay
+ * ndelay
+ * perror
+
 Facility is an atom :
  * kern
  * user
