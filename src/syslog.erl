@@ -145,7 +145,8 @@ openlog_opt(N)      -> N.
 logopt([Queue]) -> openlog_opt(Queue);
 logopt([Tail|Queue]) -> 
 	openlog_opt(Tail) bor logopt(Queue);
-logopt([]) -> 0.
+logopt([]) -> 0;
+logopt(N) -> openlog_opt(N).
 
 load_path(File) ->
 	case lists:zf(fun(Ebin) ->

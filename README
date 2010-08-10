@@ -30,7 +30,7 @@ API
 syslog:open(Ident, Logopt, Facility) :
 
 Ident is an arbitrary string
-Logopt is an array of options :
+Logopt is an atom or array of atom, you can use a number if you're brave enough :
  * pid
  * cons
  * odelay
