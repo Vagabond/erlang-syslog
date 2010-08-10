@@ -22,6 +22,10 @@
 	code_change/3
 ]).
 
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -record(state, {port}).
 
 start() ->
@@ -163,3 +167,10 @@ load_path(File) ->
 			{error, enoent}
 	end.
 
+-ifdef(TEST).
+
+logopt_test() ->
+	{ok, _} = syslog:start(),
+	11 = logopt([1,2,8]).
+
+-endif.
