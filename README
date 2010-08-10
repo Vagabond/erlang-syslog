@@ -1,0 +1,10 @@
+Erlang driver for syslog
+------------------------
+
+Forked from http://github.com/Vagabond/erlang-syslog . First step was rebarisation.
+
+Installing it
+-------------
+
+./rebar compile
+sudo ./rebar install
