@@ -20,4 +20,20 @@ $ tail -f /var/log/system.log
 $ erl
 > syslog:start().
 > syslog:open("Beuha", 1, 128).
-> syslog:log(4, "Damned").
+> syslog:log(err, "Damned").
+
+API
+---
+
+syslog:log(Priority, Message) :
+
+Priority can be a number or better, an atom :
+ * emerg
+ * alert
+ * crit
+ * err
+ * warning
+ * notice
+ * info
+ * debug
+Message is a String

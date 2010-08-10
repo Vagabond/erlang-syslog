@@ -34,7 +34,7 @@ open(Ident, Logopt, Facility) ->
 	gen_server:call(?MODULE, {open, Ident, Logopt, Facility}).
 
 log(Priority, Message) ->
-	gen_server:call(?MODULE, {log, Priority, Message}).
+	gen_server:call(?MODULE, {log, priorities(Priority), Message}).
 
 %%% API %%%
 
@@ -98,6 +98,16 @@ code_change(_, _, _) ->
 	ok.
 
 %%% internal functions %%%
+
+priorities(emerg)   -> 0;
+priorities(alert)   -> 1;
+priorities(crit)    -> 2;
+priorities(err)     -> 3;
+priorities(warning) -> 4;
+priorities(notice)  -> 5;
+priorities(info)    -> 6;
+priorities(debug)   -> 7;
+priorities(N)       -> N.
 
 load_path(File) ->
 	case lists:zf(fun(Ebin) ->
