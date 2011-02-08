@@ -98,15 +98,15 @@ handle_call({log, Priority, Message}, _From, #state{port = Port} = State) ->
 	port_command(Port, erlang:term_to_binary({log, Priority, lists:flatten(Message)})),
 	Reply = receive
 		{Port, {data, Bin}} ->
-			Result = binary_to_term(Bin)
+			binary_to_term(Bin)
 	after 1000 -> timeout
 	end,
 	{reply, Reply, State};
-handle_call({open, Ident, Logopt, Facility}, _From, State) ->
+handle_call({open, Ident, Logopt, Facility}, _From, #state{port = Port} = State) ->
 	port_command(State#state.port, erlang:term_to_binary({open, Ident, Logopt, Facility})),
 	Reply = receive
 		{Port, {data, Bin}} ->
-			Result = binary_to_term(Bin)
+			binary_to_term(Bin)
 	after 1000 -> timeout
 	end,
 	{reply, Reply, State};

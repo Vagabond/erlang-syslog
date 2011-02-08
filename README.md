@@ -1,7 +1,7 @@
 Erlang driver for syslog
 ------------------------
 
-Forked from [vagabond's erlang syslog](http://github.com/Vagabond/erlang-syslog) . First step was rebarisation, then atom for parameters.
+This is an erlang port driver for interacting with syslog.
 
 Installing it
 -------------
@@ -17,7 +17,8 @@ You should have a look at syslog.h
 In an other shell :
 
     $ tail -f /var/log/sylsog
-Or for mac user :
+
+Or, for mac users :
 
     $ tail -f /var/log/system.log
 
