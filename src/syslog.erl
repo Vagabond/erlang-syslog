@@ -46,6 +46,10 @@
 	code_change/3
 ]).
 
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -record(state, {port}).
 
 start() ->
@@ -55,10 +59,10 @@ start_linked() ->
 	gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 open(Ident, Logopt, Facility) ->
-	gen_server:call(?MODULE, {open, Ident, Logopt, Facility}).
+	gen_server:call(?MODULE, {open, Ident, logopt(Logopt), facility(Facility)}).
 
 log(Priority, Message) ->
-	gen_server:call(?MODULE, {log, Priority, Message}).
+	gen_server:call(?MODULE, {log, priorities(Priority), Message}).
 
 %%% API %%%
 
@@ -123,6 +127,55 @@ code_change(_, _, _) ->
 
 %%% internal functions %%%
 
+priorities(emerg)   -> 0;
+priorities(alert)   -> 1;
+priorities(crit)    -> 2;
+priorities(err)     -> 3;
+priorities(warning) -> 4;
+priorities(notice)  -> 5;
+priorities(info)    -> 6;
+priorities(debug)   -> 7;
+priorities(N)       -> N.
+
+facility(kern)      -> 0;
+facility(user)      -> 8;
+facility(mail)      -> 16;
+facility(daemon)    -> 24;
+facility(auth)      -> 32;
+facility(syslog)    -> 40;
+facility(lpr)       -> 48;
+facility(news)      -> 56;
+facility(uucp)      -> 64;
+facility(cron)      -> 72;
+facility(authpriv)  -> 80;
+facility(ftp)       -> 88;
+facility(netinfo)   -> 96;
+facility(remoteauth)-> 104;
+facility(install)   -> 112;
+facility(ras)       -> 120;
+facility(local0)    -> 16 * 8;
+facility(local1)    -> 17 * 8;
+facility(local2)    -> 18 * 8;
+facility(local3)    -> 19 * 8;
+facility(local4)    -> 20 * 8;
+facility(local5)    -> 21 * 8;
+facility(local6)    -> 22 * 8;
+facility(local7)    -> 23 * 8;
+facility(N)         -> N.
+
+openlog_opt(pid)    -> 1;
+openlog_opt(cons)   -> 2;
+openlog_opt(odelay) -> 4;
+openlog_opt(ndelay) -> 8;
+openlog_opt(perror) -> 20;
+openlog_opt(N)      -> N.
+
+logopt([Queue]) -> openlog_opt(Queue);
+logopt([Tail|Queue]) -> 
+	openlog_opt(Tail) bor logopt(Queue);
+logopt([]) -> 0;
+logopt(N) -> openlog_opt(N).
+
 load_path(File) ->
 	case lists:zf(fun(Ebin) ->
 					Priv = Ebin ++ "/../priv/",
@@ -138,3 +191,10 @@ load_path(File) ->
 			{error, enoent}
 	end.
 
+-ifdef(TEST).
+
+logopt_test() ->
+	{ok, _} = syslog:start(),
+	11 = logopt([1,2,8]).
+
+-endif.
