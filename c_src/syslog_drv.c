@@ -29,6 +29,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ei.h>
 #include <erl_driver.h>
 
+/* for pre-R15 compatibility */
+#if ERL_DRV_EXTENDED_MAJOR_VERSION < 2
+#define ErlDrvSizeT int
+#endif
+
 /* atoms which are sent to erlang */
 static ErlDrvTermData am_ok;
 static ErlDrvTermData am_value;
@@ -70,7 +75,7 @@ static void syslogdrv_stop(ErlDrvData handle)
 }
 
 /* messages from erlang */
-static void syslogdrv_output(ErlDrvData handle, char *buff, int bufflen)
+static void syslogdrv_output(ErlDrvData handle, char *buff, ErlDrvSizeT bufflen)
 {
 	syslogdrv_t* d = (syslogdrv_t*)handle;
 	int index = 0, version, arity;
@@ -168,5 +173,8 @@ DRIVER_INIT(syslogdrv)
 	syslogdrv_driver_entry.driver_name  = "syslog_drv";
 	syslogdrv_driver_entry.finish       = NULL;
 	syslogdrv_driver_entry.outputv      = NULL;
+	syslogdrv_driver_entry.extended_marker = ERL_DRV_EXTENDED_MARKER;
+	syslogdrv_driver_entry.major_version = ERL_DRV_EXTENDED_MAJOR_VERSION;
+	syslogdrv_driver_entry.minor_version = ERL_DRV_EXTENDED_MINOR_VERSION;
 	return &syslogdrv_driver_entry;
 }
