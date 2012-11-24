@@ -33,7 +33,8 @@
 	start/0,
 	start_link/0,
 	open/3,
-	log/2
+	log/2,
+	log/3
 ]).
 
 % gen_server callbacks
@@ -63,6 +64,8 @@ open(Ident, Logopt, Facility) ->
 
 log(Priority, Message) ->
 	gen_server:call(?MODULE, {log, priorities(Priority), Message}).
+log(Priority, Message, Timeout) ->
+    	gen_server:call(?MODULE, {log, priorities(Priority), Message}, Timeout).
 
 %%% API %%%
 
