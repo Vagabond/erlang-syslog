@@ -97,8 +97,10 @@ static void syslogdrv_output(ErlDrvData handle, char *buff, ErlDrvSizeT bufflen)
 	if (!strcmp("open", operation)) {
 		int size, type;
 
-		if (d->ident)
+		if (d->ident) {
 			free(d->ident); /* free old ident string */
+			d->ident = NULL;
+		}
 
 		ei_get_type(buff, &index, &type, &size);
 		if (type == ERL_STRING_EXT) {
