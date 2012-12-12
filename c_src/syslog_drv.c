@@ -21,7 +21,7 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
+#include <stdint.h>
 #include <syslog.h>
 #include <stdarg.h>
 #include <string.h>
@@ -89,7 +89,7 @@ static void syslogdrv_output(ErlDrvData handle, char *buf, ErlDrvSizeT len)
        as a 4-byte integer in network order, therefore make sure there's at
        least 5 bytes in the message. */
     if (d->open && len > 4) {
-        int priority = ntohl(*(int32_t*)buf);
+        int priority = ntohl(*(uint32_t*)buf);
         buf += 4;
         /* re-call openlog in case another instance of the port driver
          * was called in the mean time */
