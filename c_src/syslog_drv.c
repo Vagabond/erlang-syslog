@@ -51,17 +51,6 @@ struct syslogdrv {
 
 typedef struct syslogdrv syslogdrv_t;
 
-static ErlDrvSSizeT encode_error(char* buf, char* error) {
-    int index = 0;
-    if (ei_encode_version(buf, &index) ||
-        ei_encode_tuple_header(buf, &index, 2) ||
-        ei_encode_atom(buf, &index, "error") ||
-        ei_encode_atom(buf, &index, error)) {
-        return (ErlDrvSSizeT)ERL_DRV_ERROR_GENERAL;
-    }
-    return index+1;
-}
-
 static ErlDrvData syslogdrv_start(ErlDrvPort port, char *buf)
 {
     syslogdrv_t* d = (syslogdrv_t*)driver_alloc(sizeof(syslogdrv_t));
@@ -110,7 +99,7 @@ static ErlDrvSSizeT syslogdrv_control(ErlDrvData handle, unsigned int command,
     }
 
     if (ei_decode_version(buf, &index, &version)) {
-        return encode_error(*rbuf, "badver");
+        return (ErlDrvSSizeT)ERL_DRV_ERROR_BADARG;
     }
     if (ei_decode_tuple_header(buf, &index, &arity) || arity != 4) {
         return (ErlDrvSSizeT)ERL_DRV_ERROR_BADARG;
@@ -124,11 +113,13 @@ static ErlDrvSSizeT syslogdrv_control(ErlDrvData handle, unsigned int command,
 
         syslogdrv_t* nd = (syslogdrv_t*)driver_alloc(sizeof(syslogdrv_t));
         if (nd == NULL) {
-            return encode_error(*rbuf, "enomem");
+            errno = ENOMEM;
+            return (ErlDrvSSizeT)ERL_DRV_ERROR_ERRNO;
         }
         nd->ident = driver_alloc(size+1);
         if (nd->ident == NULL) {
-            return encode_error(*rbuf, "enomem");
+            errno = ENOMEM;
+            return (ErlDrvSSizeT)ERL_DRV_ERROR_ERRNO;
         }
         if (ei_decode_string(buf, &index, nd->ident)) {
             driver_free(nd->ident);
@@ -153,7 +144,10 @@ static ErlDrvSSizeT syslogdrv_control(ErlDrvData handle, unsigned int command,
         }
         ref = driver_alloc_binary(size);
         if (ref == NULL) {
-            return encode_error(*rbuf, "enomem");
+            driver_free(nd->ident);
+            driver_free(nd);
+            errno = ENOMEM;
+            return (ErlDrvSSizeT)ERL_DRV_ERROR_ERRNO;
         }
         if (ei_decode_binary(buf, &index, ref->orig_bytes, &len)) {
             driver_free_binary(ref);

@@ -128,24 +128,23 @@ init([]) ->
     end.
 
 handle_call({open, Ident, Logopt, Facility}, {Pid,_}, #state{port = Port} = State) ->
-    Ref = make_ref(),
-    Args = term_to_binary({Ident, Logopt, Facility, term_to_binary(Ref)}),
-    Reply = try erlang:port_control(Port, ?SYSLOGDRV_OPEN, Args) of
-                <<>> ->
-                    receive
-                        {Ref, {ok, Log}=Result} ->
-                            erlang:port_connect(Log, Pid),
-                            unlink(Log),
-                            Result;
-                        {Ref, Result} ->
-                            Result
-                    end;
-                BinError ->
-                    binary_to_term(BinError)
-            catch
-                _:Reason ->
-                    {error, Reason}
-            end,
+    Reply =
+        try
+            Ref = make_ref(),
+            Args = term_to_binary({Ident, Logopt, Facility, term_to_binary(Ref)}),
+            erlang:port_control(Port, ?SYSLOGDRV_OPEN, Args),
+            receive
+                {Ref, {ok, Log}=Result} ->
+                    erlang:port_connect(Log, Pid),
+                    unlink(Log),
+                    Result;
+                {Ref, Result} ->
+                    Result
+            end
+        catch
+            _:Reason ->
+                {error, Reason}
+        end,
     {reply, Reply, State};
 handle_call(_Msg, _From, State) ->
     {reply, ok, State}.
