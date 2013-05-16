@@ -51,6 +51,8 @@ struct syslogdrv {
 
 typedef struct syslogdrv syslogdrv_t;
 
+ErlDrvMutex *syslog_mtx;
+
 static ErlDrvSSizeT encode_error(char* buf, char* error) {
     int index = 0;
     if (ei_encode_version(buf, &index) ||
@@ -69,13 +71,16 @@ static ErlDrvData syslogdrv_start(ErlDrvPort port, char *buf)
     d->open = 0;
     d->ident = NULL;
     set_port_control_flags(port, PORT_CONTROL_FLAG_BINARY);
+    syslog_mtx = erl_drv_mutex_create("syslog_mtx");
     return (ErlDrvData)d;
 }
 
 static void syslogdrv_stop(ErlDrvData handle)
 {
     syslogdrv_t* d = (syslogdrv_t*)handle;
+    erl_drv_mutex_lock(syslog_mtx);
     closelog();
+    erl_drv_mutex_unlock(syslog_mtx);
     if (d->ident) {
         driver_free(d->ident);
     }
@@ -93,8 +98,10 @@ static void syslogdrv_output(ErlDrvData handle, char *buf, ErlDrvSizeT len)
         buf += 4;
         /* re-call openlog in case another instance of the port driver
          * was called in the mean time */
+        erl_drv_mutex_lock(syslog_mtx);
         openlog(d->ident, d->logopt, d->facility);
         syslog(priority, "%s", buf);
+        erl_drv_mutex_unlock(syslog_mtx);
     }
 }
 
@@ -239,7 +246,7 @@ static ErlDrvEntry syslogdrv_driver_entry = {
     ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
-    0,
+    ERL_DRV_FLAG_USE_PORT_LOCKING,
     NULL,
     NULL,
     NULL,
