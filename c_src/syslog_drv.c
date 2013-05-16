@@ -64,6 +64,21 @@ static ErlDrvSSizeT encode_error(char* buf, char* error) {
     return index+1;
 }
 
+static int syslogdrv_init()
+{
+    syslog_mtx = erl_drv_mutex_create("syslog_mtx");
+    if (syslog_mtx == NULL) {
+        return -1;
+    } else {
+        return 0;
+    }
+}
+
+static void syslogdrv_finish()
+{
+    erl_drv_mutex_destroy(syslog_mtx);
+}
+
 static ErlDrvData syslogdrv_start(ErlDrvPort port, char *buf)
 {
     syslogdrv_t* d = (syslogdrv_t*)driver_alloc(sizeof(syslogdrv_t));
@@ -71,7 +86,6 @@ static ErlDrvData syslogdrv_start(ErlDrvPort port, char *buf)
     d->open = 0;
     d->ident = NULL;
     set_port_control_flags(port, PORT_CONTROL_FLAG_BINARY);
-    syslog_mtx = erl_drv_mutex_create("syslog_mtx");
     return (ErlDrvData)d;
 }
 
@@ -227,14 +241,14 @@ static ErlDrvSSizeT syslogdrv_call(ErlDrvData handle, unsigned int command,
  * Initialize and return a driver entry struct
  */
 static ErlDrvEntry syslogdrv_driver_entry = {
-    NULL,
+    syslogdrv_init,
     syslogdrv_start,
     syslogdrv_stop,
     syslogdrv_output,
     NULL,
     NULL,
     DRV_NAME,
-    NULL,
+    syslogdrv_finish,
     NULL,
     syslogdrv_control,
     NULL,
