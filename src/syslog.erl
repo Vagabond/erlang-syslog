@@ -28,9 +28,8 @@
 
 -define(DRV_NAME, "syslog_drv").
 
-%% these constants must match those in syslog_drv.c
+%% this constant must match the same in syslog_drv.c
 -define(SYSLOGDRV_OPEN,  1).
--define(SYSLOGDRV_CLOSE, 2).
 
 %% API
 -export([
@@ -57,7 +56,7 @@
 -include_lib("eunit/include/eunit.hrl").
 -endif.
 
--record(state, {port}).
+-record(state, {}).
 
 start() ->
     gen_server:start({local, ?MODULE}, ?MODULE, [], []).
@@ -69,11 +68,16 @@ stop() ->
     gen_server:cast(?MODULE, stop).
 
 open(Ident, Logopt, Facility) ->
-    case gen_server:call(?MODULE, {open, Ident, logopt(Logopt), facility(Facility)}) of
-        {error, badarg} ->
-            erlang:error(badarg);
-        Else ->
-            Else
+    Log = erlang:open_port({spawn, ?DRV_NAME}, [binary]),
+    Args = term_to_binary({Ident, logopt(Logopt), facility(Facility)}),
+    try erlang:port_control(Log, ?SYSLOGDRV_OPEN, Args) of
+        <<>> ->
+            {ok, Log};
+        BinError ->
+            binary_to_term(BinError)
+    catch
+        _:Reason ->
+            {error, Reason}
     end.
 
 log(_Log, _Priority, []) ->
@@ -88,12 +92,8 @@ log(Log, Priority, FormatStr, FormatArgs) ->
     log(Log, Priority, io_lib:format(FormatStr, FormatArgs)).
 
 close(Log) ->
-    try erlang:port_call(Log, ?SYSLOGDRV_CLOSE, <<>>) of
-        Result ->
-            Result
-    after
-        port_close(Log)
-    end.
+    true = erlang:port_close(Log),
+    ok.
 
 
 %%% API %%%
@@ -121,32 +121,11 @@ init([]) ->
                  end,
     case LoadResult of
         ok ->
-            Port = erlang:open_port({spawn, ?DRV_NAME}, [binary]),
-            {ok, #state{port = Port}};
+            {ok, #state{}};
         Error ->
             Error
     end.
 
-handle_call({open, Ident, Logopt, Facility}, {Pid,_}, #state{port = Port} = State) ->
-    Ref = make_ref(),
-    Args = term_to_binary({Ident, Logopt, Facility, term_to_binary(Ref)}),
-    Reply = try erlang:port_control(Port, ?SYSLOGDRV_OPEN, Args) of
-                <<>> ->
-                    receive
-                        {Ref, {ok, Log}=Result} ->
-                            erlang:port_connect(Log, Pid),
-                            unlink(Log),
-                            Result;
-                        {Ref, Result} ->
-                            Result
-                    end;
-                BinError ->
-                    binary_to_term(BinError)
-            catch
-                _:Reason ->
-                    {error, Reason}
-            end,
-    {reply, Reply, State};
 handle_call(_Msg, _From, State) ->
     {reply, ok, State}.
 
@@ -158,8 +137,7 @@ handle_cast(_Msg, State) ->
 handle_info(_Info, State) ->
     {noreply, State}.
 
-terminate(_Reason, #state{port = Port}) ->
-    erlang:port_close(Port),
+terminate(_Reason, _State) ->
     ok.
 
 code_change(_, _, _) ->
