@@ -184,7 +184,7 @@ static ErlDrvSSizeT syslogdrv_control(ErlDrvData handle, unsigned int command,
                 ERL_DRV_TUPLE, 2,
                 ERL_DRV_TUPLE, 2,
             };
-            driver_output_term(port, term, sizeof term/sizeof *term);
+            erl_drv_output_term(driver_mk_port(port), term, sizeof term/sizeof *term);
         }
         driver_free_binary(ref);
         return 0;
