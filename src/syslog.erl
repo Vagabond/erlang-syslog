@@ -162,8 +162,8 @@ terminate(_Reason, #state{port = Port}) ->
     erlang:port_close(Port),
     ok.
 
-code_change(_, _, _) ->
-    ok.
+code_change(_, State, _) ->
+    {ok, State}.
 
 %%% internal functions %%%
 
