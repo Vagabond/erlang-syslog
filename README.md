@@ -1,7 +1,7 @@
 Erlang driver for syslog
 ------------------------
 
-  [[http://travis-ci.org/istr/erlang-syslog][Travis-CI]] :: [[https://secure.travis-ci.org/istr/erlang-syslog.png]]
+  [Travis-CI](http://travis-ci.org/istr/erlang-syslog) :: ![Travis-CI](https://secure.travis-ci.org/istr/erlang-syslog.png)
 
 This is an erlang port driver for interacting directly with syslog,
 without using sockets but using library / system calls.
