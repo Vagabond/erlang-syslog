@@ -105,7 +105,7 @@ init([]) ->
                   {error, bad_name} ->
                       EbinDir = filename:dirname(code:which(?MODULE)),
                       AppPath = filename:dirname(EbinDir),
-                      filename:join(AppPath, "priv");
+                      filename:join(AppPath, "../priv");
                   Path ->
                       Path
               end,
