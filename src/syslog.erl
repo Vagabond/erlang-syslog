@@ -100,7 +100,7 @@ close(Log) ->
 
 init([]) ->
     process_flag(trap_exit, true),
-    erl_ddll:start(),
+    _ = erl_ddll:start(), % deprecated. will return {'error',{'already_started','undefined'}} on newer OTP releases
     PrivDir = case code:priv_dir(?MODULE) of
                   {error, bad_name} ->
                       EbinDir = filename:dirname(code:which(?MODULE)),
