@@ -42,7 +42,9 @@
          close/1,
          priority/1,
          facility/1,
-         openlog_opt/1
+         openlog_opt/1,
+         load/0,
+         unload/0
         ]).
 
 %% gen_server callbacks
@@ -195,11 +197,10 @@ openlog_opt(perror) -> 20;
 openlog_opt(N) when is_integer(N), N >= 1 -> N;
 openlog_opt(_) -> erlang:error(badarg).
 
-%%% gen_server callbacks %%%
+-spec load() ->
+    ok | {error, string()}.
 
-init([]) ->
-    process_flag(trap_exit, true),
-    erl_ddll:start(),
+load() ->
     PrivDir = case code:priv_dir(?MODULE) of
                   {error, bad_name} ->
                       EbinDir = filename:dirname(code:which(?MODULE)),
@@ -208,21 +209,39 @@ init([]) ->
                   Path ->
                       Path
               end,
-    LoadResult = case erl_ddll:load_driver(PrivDir, ?DRV_NAME) of
-                     ok -> ok;
-                     {error, already_loaded} -> ok;
-                     {error, LoadError} ->
-                         LoadErrorStr = erl_ddll:format_error(LoadError),
-                         ErrStr = lists:flatten(
-                                    io_lib:format("could not load driver ~s: ~p",
-                                                  [?DRV_NAME, LoadErrorStr])),
-                         {stop, ErrStr}
-                 end,
-    case LoadResult of
+    case erl_ddll:load_driver(PrivDir, ?DRV_NAME) of
+        ok -> ok;
+        {error, already_loaded} -> ok;
+        {error, LoadError} ->
+            LoadErrorStr = erl_ddll:format_error(LoadError),
+            ErrStr = lists:flatten(
+                io_lib:format("could not load driver ~s: ~p",
+                              [?DRV_NAME, LoadErrorStr])),
+            {error, ErrStr}
+    end.
+
+-spec unload() ->
+    ok | {error, string()}.
+
+unload() ->
+    case erl_ddll:unload_driver(?DRV_NAME) of
+        ok -> ok;
+        {error, UnloadError} ->
+            UnloadErrorStr = erl_ddll:format_error(UnloadError),
+            ErrStr = lists:flatten(
+                io_lib:format("could not unload driver ~s: ~p",
+                              [?DRV_NAME, UnloadErrorStr])),
+            {error, ErrStr}
+    end.
+
+%%% gen_server callbacks %%%
+
+init([]) ->
+    case load() of
         ok ->
             {ok, #state{}};
-        Error ->
-            Error
+        {error, Reason} ->
+            {stop, Reason}
     end.
 
 handle_call(_Msg, _From, State) ->
