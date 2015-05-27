@@ -2,3 +2,4 @@ c_src/syslog_drv.o
 ebin/
 priv/
 .eunit/
+_build/
