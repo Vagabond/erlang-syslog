@@ -2,3 +2,6 @@ c_src/syslog_drv.o
 ebin/
 priv/
 .eunit/
+_build/
+c_src/syslog_drv.d
+compile_commands.json
