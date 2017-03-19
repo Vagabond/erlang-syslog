@@ -51,6 +51,8 @@ struct syslogdrv {
 
 typedef struct syslogdrv syslogdrv_t;
 
+ErlDrvMutex *syslog_mtx;
+
 static ErlDrvSSizeT encode_error(char* buf, char* error) {
     int index = 0;
     if (ei_encode_version(buf, &index) ||
@@ -60,6 +62,21 @@ static ErlDrvSSizeT encode_error(char* buf, char* error) {
         return (ErlDrvSSizeT)ERL_DRV_ERROR_GENERAL;
     }
     return index+1;
+}
+
+static int syslogdrv_init()
+{
+    syslog_mtx = erl_drv_mutex_create("syslog_mtx");
+    if (syslog_mtx == NULL) {
+        return -1;
+    } else {
+        return 0;
+    }
+}
+
+static void syslogdrv_finish()
+{
+    erl_drv_mutex_destroy(syslog_mtx);
 }
 
 static ErlDrvData syslogdrv_start(ErlDrvPort port, char *buf)
@@ -75,7 +92,9 @@ static ErlDrvData syslogdrv_start(ErlDrvPort port, char *buf)
 static void syslogdrv_stop(ErlDrvData handle)
 {
     syslogdrv_t* d = (syslogdrv_t*)handle;
+    erl_drv_mutex_lock(syslog_mtx);
     closelog();
+    erl_drv_mutex_unlock(syslog_mtx);
     if (d->ident) {
         driver_free(d->ident);
     }
@@ -93,8 +112,10 @@ static void syslogdrv_output(ErlDrvData handle, char *buf, ErlDrvSizeT len)
         buf += 4;
         /* re-call openlog in case another instance of the port driver
          * was called in the mean time */
+        erl_drv_mutex_lock(syslog_mtx);
         openlog(d->ident, d->logopt, d->facility);
         syslog(priority, "%s", buf);
+        erl_drv_mutex_unlock(syslog_mtx);
     }
 }
 
@@ -151,14 +172,14 @@ static ErlDrvSSizeT syslogdrv_control(ErlDrvData handle, unsigned int command,
  * Initialize and return a driver entry struct
  */
 static ErlDrvEntry syslogdrv_driver_entry = {
-    NULL,
+    syslogdrv_init,
     syslogdrv_start,
     syslogdrv_stop,
     syslogdrv_output,
     NULL,
     NULL,
     DRV_NAME,
-    NULL,
+    syslogdrv_finish,
     NULL,
     syslogdrv_control,
     NULL,
@@ -170,7 +191,7 @@ static ErlDrvEntry syslogdrv_driver_entry = {
     ERL_DRV_EXTENDED_MARKER,
     ERL_DRV_EXTENDED_MAJOR_VERSION,
     ERL_DRV_EXTENDED_MINOR_VERSION,
-    0,
+    ERL_DRV_FLAG_USE_PORT_LOCKING,
     NULL,
     NULL,
     NULL,
