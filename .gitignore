@@ -3,3 +3,6 @@ ebin/
 priv/
 .eunit/
 doc/
+_build/
+c_src/syslog_drv.d
+compile_commands.json

@@ -9,8 +9,7 @@ without using sockets but using library / system calls.
 Installing it
 -------------
 
-    ./rebar compile
-    sudo ./rebar install
+    ./rebar3 compile
 
 Trying it
 ---------
